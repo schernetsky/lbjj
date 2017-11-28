@@ -1,0 +1,7 @@
+/*
+ * Copyright 2016 <CLIENT_NAME>. All rights reserved.
+ *
+ * Created by randy on 09/14/2016.
+ */
+
+include ':app'

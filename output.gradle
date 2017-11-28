@@ -1,0 +1,47 @@
+/*
+ * Copyright 2017 L4 Digital LLC. All rights reserved.
+ *
+ * Created by randy on 03/29/2017.
+ */
+
+ext { // export methods
+    createZipProguardTask = this.&createZipProguardTask
+    updateApkName = this.&updateApkName
+}
+
+def createZipProguardTask(String appName, variant) {
+    def taskName = "${upperCaseFirst(variant.flavorName)}${upperCaseFirst(variant.buildType.name)}"
+
+    task("zipProguard$taskName", type: Zip, dependsOn: "assemble$taskName") {
+        archiveName = "${getAppPrefix(appName)}-${addSeparator(variant.flavorName, '-')}proguard.zip"
+
+        from "build/outputs/mapping/${addSeparator(variant.flavorName, '/')}release"
+        destinationDir file('build/outputs/mapping')
+    }
+}
+
+def updateApkName(String appName, variant) {
+    variant.outputs.all { output ->
+        outputFileName = output.outputFile.name.replace(project.name, getAppPrefix(appName))
+    }
+}
+
+def getAppPrefix(String appName, boolean withBuildNumber = true) {
+    if (withBuildNumber && project.hasProperty('buildNumber')) {
+        def buildNumber = project.getProperties().get('buildNumber')
+
+        if (buildNumber != null && buildNumber.length() > 0) {
+            return "${appName}-${buildNumber}"
+        }
+    }
+
+    return appName
+}
+
+static def addSeparator(String value, String separator) {
+    return value != null && value.length() > 0 ? "${value}${separator}" : ''
+}
+
+static def upperCaseFirst(String value) {
+    return value.isEmpty() ? "" : value.substring(0, 1).toUpperCase() + value.substring(1)
+}

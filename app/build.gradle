@@ -1,0 +1,119 @@
+/*
+ * Copyright 2016 <CLIENT_NAME>. All rights reserved.
+ *
+ * Created by randy on 09/14/2016.
+ */
+
+apply from: "$rootDir/output.gradle"
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.sdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId 'com.client.app'
+
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+
+        minSdkVersion 19
+        targetSdkVersion rootProject.ext.sdkVersion
+
+        multiDexEnabled false
+        vectorDrawables.useSupportLibrary true
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    dataBinding {
+        enabled true
+    }
+
+    dexOptions {
+        javaMaxHeapSize '2048M'
+    }
+
+    lintOptions {
+        enable 'StopShip'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            createZipProguardTask(rootProject.ext.applicationName, variant)
+        }
+
+        updateApkName(rootProject.ext.applicationName, variant)
+    }
+}
+
+dependencies {
+    kapt "com.android.databinding:compiler:$gradleVersion"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlinVersion"
+
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation "com.android.support:support-v13:$supportLibVersion"
+
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.4'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+
+    implementation 'com.squareup.moshi:moshi:1.5.0'
+    implementation 'com.squareup.moshi:moshi-adapters:1.5.0'
+    implementation 'com.squareup.moshi:moshi-kotlin:1.5.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-moshi:2.3.0'
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+    testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.7.6'
+    testImplementation('com.android.support.test:rules:1.0.1') {
+        exclude module: 'support-annotations'
+    }
+
+    androidTestImplementation('com.android.support.test:runner:1.0.1') {
+        exclude module: 'support-annotations'
+    }
+}
+
+task androidTest(dependsOn: 'connectedDebugAndroidTest') {
+    group = 'Verification'
+    description = 'Runs the tests for debug on connected devices'
+    android.defaultConfig.testInstrumentationRunnerArguments.package = 'com.client.app.unit'
+}
+
+task unitTest(dependsOn: 'testDebugUnitTest') {
+    group = 'Verification'
+    description = 'Run unit tests for the debug build'
+}
+
+// required for continuous integration
+project.gradle.taskGraph.whenReady {
+    connectedDebugAndroidTest {
+        ignoreFailures = true
+    }
+}
